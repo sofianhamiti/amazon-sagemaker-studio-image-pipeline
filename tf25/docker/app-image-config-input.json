@@ -1,0 +1,16 @@
+{
+    "AppImageConfigName": "tf25-config",
+    "KernelGatewayImageConfig": {
+        "KernelSpecs": [
+            {
+                "Name": "python3",
+                "DisplayName": "tensorflow25"
+            }
+        ],
+        "FileSystemConfig": {
+            "MountPath": "/root",
+            "DefaultUid": 0,
+            "DefaultGid": 0
+        }
+    }
+}

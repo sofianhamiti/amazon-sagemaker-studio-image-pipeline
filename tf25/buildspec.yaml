@@ -1,0 +1,14 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-8)
+      - sh build_and_push.sh ${IMAGE_NAME} ${IMAGE_TAG}
+      - echo "IMAGE PUSHED TO ECR"
+
+  build:
+    commands:
+      - echo "ATTACHING IMAGE TO STUDIO DOMAIN ${DOMAIN_ID}"
+      - sh attach_image.sh ${IMAGE_NAME} ${IMAGE_TAG}
+#      - echo "IMAGE ATTACHED TO STUDIO"

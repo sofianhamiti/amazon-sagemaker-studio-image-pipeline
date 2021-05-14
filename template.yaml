@@ -1,0 +1,140 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  DomainID:
+    Type: String
+    Default: d-wuia7ptyegry
+  ImageName:
+    Type: String
+    Default: tf25
+  ImageRoleArn:
+    Type: String
+    Default: arn:aws:iam::366243680492:role/mlops05-SageMakerAPIExecutionRole
+
+Resources:
+  #================================================================================
+  # CODEPIPELINE
+  #================================================================================
+  CodePipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: !Ref ImageName
+      RoleArn: !GetAtt CodePipelineRole.Arn
+      ArtifactStore:
+        Location: !Ref PipelineArtifactBucket
+        Type: S3
+      RestartExecutionOnUpdate: True
+      Stages:
+        - Name: Source
+          Actions:
+            - InputArtifacts: [ ]
+              Name: Source
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Version: 1
+                Provider: CodeCommit
+              Configuration:
+                RepositoryName: !GetAtt CodeRepository.Name
+                BranchName: master
+              OutputArtifacts:
+                - Name: CFNSource
+              RunOrder: 1
+
+        - Name: Build
+          Actions:
+            - Name: Build
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Version: 1
+                Provider: CodeBuild
+              Configuration:
+                ProjectName: !Ref CodeBuild
+              InputArtifacts:
+                - Name: CFNSource
+              RunOrder: 1
+  #================================================================================
+  # IAM
+  #================================================================================
+  CodePipelineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codepipeline.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess #TODO: Reduce permissions
+
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: codebuild.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess #TODO: Reduce permissions
+  #================================================================================
+  # CODEBUILD
+  #================================================================================
+  CodeBuild:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Ref ImageName
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:5.0
+        Type: LINUX_CONTAINER
+        PrivilegedMode: true
+        EnvironmentVariables:
+          - Name: DOMAIN_ID
+            Value: !Ref DomainID
+          - Name: IMAGE_NAME
+            Value: !Ref ImageName
+          - Name: ACCOUNT_ID
+            Value: !Ref AWS::AccountId
+          - Name: REGION
+            Value: !Ref AWS::Region
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: buildspec.yaml
+  #================================================================================
+  # S3
+  #================================================================================
+  PipelineArtifactBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${ImageName}-studio-image-${AWS::AccountId}
+      AccessControl: Private
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+  #================================================================================
+  # CODECOMMIT
+  #================================================================================
+  CodeRepository:
+    Type: AWS::CodeCommit::Repository
+    Properties:
+      RepositoryName: !Ref ImageName
+  #================================================================================
+  # STUDIO IMAGE
+  #================================================================================
+  StudioImage:
+    Type: AWS::SageMaker::Image
+    Properties: 
+      ImageDescription: Tensorflow 2.5.0 in Studio
+      ImageDisplayName: !Ref ImageName
+      ImageName: !Ref ImageName
+      ImageRoleArn: !Ref ImageRoleArn

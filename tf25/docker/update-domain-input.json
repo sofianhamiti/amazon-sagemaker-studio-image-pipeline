@@ -1,0 +1,13 @@
+{
+    "DomainId": "<domain-id>",
+    "DefaultUserSettings": {
+        "KernelGatewayAppSettings": {
+            "CustomImages": [
+                {
+                    "ImageName": "tf25",
+                    "AppImageConfigName": "tf25-config"
+                }
+            ]
+        }
+    }
+}
