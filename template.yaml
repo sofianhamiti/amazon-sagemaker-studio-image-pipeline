@@ -3,13 +3,13 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   DomainID:
     Type: String
-    Default: d-wuia7ptyegry
+    Default: <ADD YOUR STUDIO DOMAIN ID HERE>
   ImageName:
     Type: String
     Default: tf25
   ImageRoleArn:
     Type: String
-    Default: arn:aws:iam::366243680492:role/mlops05-SageMakerAPIExecutionRole
+    Default: <ADD THE IMAGE ROLE ARN HERE>
 
 Resources:
   #================================================================================
