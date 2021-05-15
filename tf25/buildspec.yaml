@@ -11,4 +11,4 @@ phases:
     commands:
       - echo "ATTACHING IMAGE TO STUDIO DOMAIN ${DOMAIN_ID}"
       - sh attach_image.sh ${IMAGE_NAME} ${IMAGE_TAG}
-#      - echo "IMAGE ATTACHED TO STUDIO"
+      - echo "IMAGE ATTACHED TO STUDIO"
