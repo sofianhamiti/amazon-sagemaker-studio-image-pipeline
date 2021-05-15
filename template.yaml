@@ -67,8 +67,23 @@ Resources:
             Principal:
               Service: codepipeline.amazonaws.com
             Action: sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AdministratorAccess #TODO: Reduce permissions
+      Policies:
+        - PolicyName: policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:*
+                Resource: !Sub ${PipelineArtifactBucket.Arn}/*
+              - Effect: Allow
+                Action:
+                  - codecommit:*
+                Resource: !GetAtt CodeRepository.Arn
+              - Effect: Allow
+                Action:
+                  - codebuild:*
+                Resource: !GetAtt CodeBuild.Arn
 
   CodeBuildRole:
     Type: AWS::IAM::Role
@@ -80,8 +95,45 @@ Resources:
           Principal:
             Service: codebuild.amazonaws.com
           Action: sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AdministratorAccess #TODO: Reduce permissions
+      Policies:
+        - PolicyName: policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:*
+                Resource: !Sub ${PipelineArtifactBucket.Arn}/*
+              - Effect: Allow
+                Action:
+                  - ecr:*
+                Resource: !Sub arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${ImageName}
+              - Effect: Allow
+                Action:
+                  - ecr:GetAuthorizationToken
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:DescribeLogGroups
+                  - logs:DescribeLogStreams
+                  - logs:PutLogEvents
+                  - logs:GetLogEvents
+                  - logs:FilterLogEvents
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - sagemaker:UpdateDomain
+                  - sagemaker:CreateImage
+                  - sagemaker:CreateImageVersion
+                  - sagemaker:UpdateImage
+                  - sagemaker:UpdateAppImageConfig
+                  - sagemaker:DeleteImage
+                  - sagemaker:DeleteImageVersion
+                  - sagemaker:CreateAppImageConfig
+                  - sagemaker:DeleteAppImageConfig
+                Resource: !Sub arn:aws:sagemaker:${AWS::Region}:${AWS::AccountId}:*
   #================================================================================
   # CODEBUILD
   #================================================================================
@@ -133,7 +185,7 @@ Resources:
   #================================================================================
   StudioImage:
     Type: AWS::SageMaker::Image
-    Properties: 
+    Properties:
       ImageDescription: Tensorflow 2.5.0 in Studio
       ImageDisplayName: !Ref ImageName
       ImageName: !Ref ImageName

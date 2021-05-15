@@ -4,7 +4,7 @@
         "KernelSpecs": [
             {
                 "Name": "python3",
-                "DisplayName": "tensorflow25"
+                "DisplayName": "tensorflow 2.5.0"
             }
         ],
         "FileSystemConfig": {
